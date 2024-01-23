@@ -6,29 +6,30 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from app import db, login_manager
 from app.components.users.models import User
 from app.lib.error_handler import handle_route_errors
+from app.components.users.repository import user_repository
 
 auth_bp = Blueprint('auth', __name__)
 
 @login_manager.user_loader
 def load_user(user_id):
-    return User.query.get(int(user_id))
+    return User.query.get(str(user_id))
 
 @auth_bp.route('/signup', methods=['POST'])
 @handle_route_errors
 def signup():
     data = request.get_json()
-
-    firstname = data.get('firstname')
-    lastname = data.get('lastname')
-    email = data.get('email')
-    username = data.get('username')
+    
     password = data.get('password')
+    hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
+    payload = {
+        'firstname': data.get('firstname'),
+        'lastname': data.get('lastname'),
+        'email': data.get('email'),
+        'username': data.get('username'),
+        'password': hashed_password
+    }
 
-    hashed_password = generate_password_hash(password, method='sha256')
-
-    new_user = User(firstname=firstname, lastname=lastname, email=email, username=username, password=hashed_password)
-    db.session.add(new_user)
-    db.session.commit()
+    new_user = user_repository.create(payload)
 
     return jsonify({'message': 'User created successfully!'}), 201
 

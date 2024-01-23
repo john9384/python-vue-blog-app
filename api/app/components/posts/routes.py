@@ -2,6 +2,7 @@ import sqlite3
 from flask import Blueprint, jsonify, request
 from app.components.posts.models import Post
 from app.lib.error_handler import handle_route_errors
+from flask_login import login_required, current_user
 
 posts_bp = Blueprint('posts', __name__)
 

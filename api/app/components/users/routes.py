@@ -5,6 +5,7 @@ from app.components.users.models import User
 from app import db
 from flask_login import login_required, current_user
 from app.lib.error_handler import handle_route_errors
+from app.components.users.repository import user_repository
 
 users_bp = Blueprint('users', __name__)
 
@@ -12,8 +13,9 @@ users_bp = Blueprint('users', __name__)
 @login_required
 @handle_route_errors
 def get_all_users():
-    users = User.query.all()
-    return jsonify({'users': [user.to_dict() for user in users]})
+    query_params = request.args
+    users = user_repository.find_all(query_params)
+    return jsonify({'users': users})
 
 @users_bp.route('/current-user', methods=['GET'])
 @login_required
@@ -21,47 +23,34 @@ def get_all_users():
 def get_current_user():
     return jsonify({'id': current_user.id, 'username': current_user.username, 'email': current_user.email}), 200
 
-@users_bp.route('/<int:user_id>', methods=['GET'])
+@users_bp.route('/<string:user_id>', methods=['GET'])
 @login_required
 @handle_route_errors
 def get_user(user_id):
-    user = User.query.get(user_id)
-    if user:
-        return jsonify({'user': user.to_dict()})
-    else:
-        return jsonify({'error': 'User not found'}), 404
+    user = user_repository.find_one({"id": user_id})
+    if user is None:
+        raise Exception("User not found")
+   
+    return jsonify({'user': user})
 
 
-@users_bp.route('/<int:user_id>', methods=['PUT'])
+@users_bp.route('/<string:user_id>', methods=['PUT'])
 @login_required
 @handle_route_errors
 def update_user(user_id):
     data = request.json
-    user = User.query.get(user_id)
+    payload = {
+        'firstname': data.get('firstname'),
+        'lastname': data.get('lastname'),
+    }
 
-    if user:
-        user.firstname = data['firstname']
-        user.lastname = data['lastname']
-        user.email = data['email']
-        user.username = data['username']
-        user.password = data['password']
+    user = user_repository.update({'id': user_id}, payload)
 
-        db.session.commit()
+    return jsonify({'user': user})
 
-        return jsonify({'user': user.to_dict()})
-    else:
-        return jsonify({'error': 'User not found'}), 404
-
-@users_bp.route('/<int:user_id>', methods=['DELETE'])
+@users_bp.route('/<string:user_id>', methods=['DELETE'])
 @login_required
 @handle_route_errors
 def delete_user(user_id):
-    user = User.query.get(user_id)
-
-    if user:
-        db.session.delete(user)
-        db.session.commit()
-
-        return jsonify({'message': 'User deleted successfully'})
-    else:
-        return jsonify({'error': 'User not found'}), 404
+    user_repository.delete({ "id": user_id})
+    return jsonify({'message': 'User deleted successfully'})
