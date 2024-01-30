@@ -21,17 +21,15 @@ def get_all_users():
 @login_required
 @handle_route_errors
 def get_current_user():
-    return jsonify({'id': current_user.id, 'username': current_user.username, 'email': current_user.email}), 200
+    outcome = user_service.read({'id': current_user.id})
+    return SuccessResponse("User fetched successfully", outcome, OK).send()
 
 @users_bp.route('/<string:user_id>', methods=['GET'])
 @login_required
 @handle_route_errors
 def get_user(user_id):
-    user = user_repository.find_one({"id": user_id})
-    if user is None:
-        raise Exception("User not found")
-   
-    return jsonify({'user': user})
+    outcome = user_service.read({'id': user_id})
+    return SuccessResponse("User fetched successfully", outcome, OK).send()
 
 
 @users_bp.route('/<string:user_id>', methods=['PUT'])
@@ -39,18 +37,13 @@ def get_user(user_id):
 @handle_route_errors
 def update_user(user_id):
     data = request.json
-    payload = {
-        'firstname': data.get('firstname'),
-        'lastname': data.get('lastname'),
-    }
+    outcome = user_service.update({'id': user_id}, data)
 
-    user = user_repository.update({'id': user_id}, payload)
-
-    return jsonify({'user': user})
+    return SuccessResponse("User updated successfully", outcome, OK).send()
 
 @users_bp.route('/<string:user_id>', methods=['DELETE'])
 @login_required
 @handle_route_errors
 def delete_user(user_id):
-    user_repository.delete({ "id": user_id})
-    return jsonify({'message': 'User deleted successfully'})
+    outcome = user_service.delete({ "id": user_id})
+    return SuccessResponse("User deleted successfully", outcome, OK).send()

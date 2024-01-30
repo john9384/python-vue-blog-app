@@ -1,14 +1,16 @@
-# app/components/auth/routes.py
-
-from flask import Blueprint, request, jsonify, redirect, url_for
+from flask import Blueprint, request
 from flask_login import login_user, login_required, logout_user, current_user
-from werkzeug.security import generate_password_hash, check_password_hash
-from app import db, login_manager
+from app import login_manager
 from app.components.users.models import User
 from app.lib.error_handler import handle_route_errors
-from app.components.users.repository import user_repository
+from app.components.users.presenter import UserPresenter
+from app.components.auth.services import AuthService
+from app.components.users.services import UserService
+from app.lib.response import SuccessResponse, OK, CREATED, BAD_REQUEST
 
 auth_bp = Blueprint('auth', __name__)
+auth_service = AuthService()
+user_service = UserService()
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -18,45 +20,28 @@ def load_user(user_id):
 @handle_route_errors
 def signup():
     data = request.get_json()
-    
-    password = data.get('password')
-    hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
-    payload = {
-        'firstname': data.get('firstname'),
-        'lastname': data.get('lastname'),
-        'email': data.get('email'),
-        'username': data.get('username'),
-        'password': hashed_password
-    }
+    outcome = auth_service.signup(data)
 
-    new_user = user_repository.create(payload)
-
-    return jsonify({'message': 'User created successfully!'}), 201
+    return SuccessResponse("User created successfully", outcome, CREATED).send()
 
 @auth_bp.route('/login', methods=['POST'])
 @handle_route_errors
 def login():
     data = request.get_json()
+    outcome = auth_service.login(data)
 
-    email = data.get('email')
-    password = data.get('password')
-
-    user = User.query.filter_by(email=email).first()
-
-    if user and check_password_hash(user.password, password):
-        login_user(user)
-        return jsonify({'message': 'Login successful!'}), 200
-    else:
-        return jsonify({'message': 'Invalid username or password'}), 401
+    return SuccessResponse("User logged in successfully", outcome, OK).send()
 
 @auth_bp.route('/logout')
 @login_required
 @handle_route_errors
 def logout():
     logout_user()
-    return jsonify({'message': 'Logout successful!'}), 200
+    return SuccessResponse("User logged out").send()
 
 @auth_bp.route('/user', methods=['GET'])
 @login_required
 def get_user():
-    return jsonify({'id': current_user.id, 'username': current_user.username, 'email': current_user.email}), 200
+    outcome = user_service.read({'id': current_user.id})
+
+    return SuccessResponse("User fetched successfully", outcome).send()

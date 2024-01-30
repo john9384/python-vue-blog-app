@@ -11,16 +11,6 @@ class User(db.Model):
     username = db.Column(db.String(80), unique=True)
     password = db.Column(db.String(80))
 
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'firstname': self.firstname,
-            'lastname': self.lastname,
-            'email': self.email,
-            'username': self.username,
-        }
-
-
     def __repr__(self):
         return f"User('{self.firstname}', '{self.lastname}', '{self.email}', '{self.username}')"
 

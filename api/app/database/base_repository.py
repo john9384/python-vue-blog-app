@@ -11,7 +11,7 @@ class BaseRepository:
     db.session.add(new_model)
     db.session.commit()
 
-    return { "id" : new_model.id}
+    return new_model
 
   def find_all(self, query):
     results = []
@@ -25,7 +25,7 @@ class BaseRepository:
     else:
       results = self._model.query.all()
 
-    return [result.to_dict() for result in results]
+    return results
 
   def find_one(self, query):
     if query:
@@ -35,7 +35,9 @@ class BaseRepository:
           base_query = base_query.filter(getattr(self._model, key) == value)
       
       result = base_query.first()
-      return result.to_dict()
+      
+      if result: return result
+      else: return None
     else:
       return None
 
@@ -56,7 +58,7 @@ class BaseRepository:
 
     db.session.commit()
 
-    return instance.to_dict()
+    return instance
 
   def delete(self, query):
     base_query = self._model.query
@@ -74,6 +76,6 @@ class BaseRepository:
     db.session.delete(instance)
     db.session.commit()
 
-    return { "id" : id }
+    return id
 
     

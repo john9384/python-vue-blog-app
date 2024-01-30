@@ -1,10 +1,9 @@
 from app.database.base_repository import BaseRepository
-from app.components.users.models import User
+from app.components.posts.models import Post
 
-class UserRepository(BaseRepository):
+class PostRepository(BaseRepository):
   def __init__(self, _model):
     self._model = _model
     super().__init__(_model)
 
-
-user_repository = UserRepository(User)
+post_repository = PostRepository(Post)
