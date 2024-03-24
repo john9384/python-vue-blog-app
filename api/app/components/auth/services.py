@@ -1,7 +1,14 @@
 from werkzeug.security import generate_password_hash, check_password_hash
+from app.components.users.repository import user_repository
+from app.components.users.presenter import UserPresenter
+from app.lib.jwt import JWT
 
 class AuthService:
-  def signup(data):
+  def signup(self, data):
+  
+    if user_repository.find_one({ 'email' : data.get('email') }) or user_repository.find_one({ 'username' : data.get('username') }):
+      raise Exception("User with email or username already exist")
+
     password = data.get('password')
     hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
     payload = {
@@ -13,17 +20,17 @@ class AuthService:
     }
 
     new_user = user_repository.create(payload)
-    user_data = UserPresenter(new_user).serialize()
+    return UserPresenter(new_user).serialize()
 
-  def login():
-    data = request.get_json()
+  def login(self, data):
     email = data.get('email')
     password = data.get('password')
-
     user = user_repository.find_one({ 'email' : email})
-  
-    if user and check_password_hash(user.password, password):
-        login_user(user)
-        return UserPresenter(user).serialize() 
-    else:
-        raise Exception("Invalid username or password")
+
+    if not user or not check_password_hash(user.password, password):
+      raise Exception("Invalid username or password")
+
+    auth_token = JWT().encode_auth_token(user.id)
+    print(auth_token)
+    return {'token': auth_token, 'user': UserPresenter(user).serialize()}
+        

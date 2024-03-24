@@ -17,7 +17,7 @@ class ApiResponse:
     pass
 
 class SuccessResponse:
-  def __init__(self, message, content=None, statusCode=OK):
+  def __init__(self, message, content, statusCode=OK):
     self.statusCode = OK 
     self.message = message
     self.content = content
@@ -27,7 +27,7 @@ class SuccessResponse:
 
 
 class BadRequestResponse:
-  def __init__(self, message, content=None, statusCode=BAD_REQUEST):
+  def __init__(self, message, content, statusCode=BAD_REQUEST):
     self.statusCode = statusCode
     self.message = message
     self.content = content

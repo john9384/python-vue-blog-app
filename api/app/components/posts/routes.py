@@ -2,7 +2,7 @@ import sqlite3
 from flask import Blueprint, jsonify, request
 from app.components.posts.models import Post
 from app.lib.error_handler import handle_route_errors
-from flask_login import login_required, current_user
+from app.lib.authenticate import is_authenticated
 
 posts_bp = Blueprint('posts', __name__)
 
@@ -20,7 +20,7 @@ def get_post(post_id):
         return jsonify({'error': 'Post not found'}), 404
 
 @posts_bp.route('', methods=['POST'])
-@login_required
+@is_authenticated
 @handle_route_errors
 def create_post():
     data = request.json
@@ -37,7 +37,7 @@ def create_post():
     return jsonify({'post': new_post.to_dict()}), 201
 
 @posts_bp.route('/<int:post_id>', methods=['PUT'])
-@login_required
+@is_authenticated
 @handle_route_errors
 def update_post(post_id):
     data = request.json
@@ -56,7 +56,7 @@ def update_post(post_id):
         return jsonify({'error': 'Post not found'}), 404
 
 @posts_bp.route('/<int:post_id>', methods=['DELETE'])
-@login_required
+@is_authenticated
 @handle_route_errors
 def delete_post(post_id):
     post = Post.query.get(post_id)

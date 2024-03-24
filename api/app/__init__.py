@@ -1,42 +1,36 @@
-# app/__init__.py
-
+from dotenv import load_dotenv
+load_dotenv()
+ 
 from flask import Flask, jsonify
-from flask_sqlalchemy import SQLAlchemy
-from flask_login import LoginManager
+from app.config import Config
+from app.database import create_db_instance
 
-db = SQLAlchemy()
-login_manager = LoginManager()
 
-def create_app():
-    app = Flask(__name__)
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    app.config['SECRET_KEY'] = 'your_secret_key'
+app = Flask(__name__)
+app.config.from_object(Config)  
+db = create_db_instance(app)
 
-    # Initialize extensions
-    db.init_app(app)
-    login_manager.init_app(app)
+@app.route('/')
+def index():
+    return jsonify({'message': 'Hello World'})
 
-    # Register blueprints
-    from app.components.users.routes import users_bp
-    from app.components.posts.routes import posts_bp
-    from app.components.auth.routes import auth_bp  # Add this line
+# Register blueprints
+from app.components.users.routes import users_bp
+from app.components.posts.routes import posts_bp
+from app.components.auth.routes import auth_bp
 
-    app.register_blueprint(users_bp, url_prefix='/api/users')
-    app.register_blueprint(posts_bp, url_prefix='/api/posts')
-    app.register_blueprint(auth_bp, url_prefix='/api/auth')
+app.register_blueprint(users_bp, url_prefix='/api/users')
+app.register_blueprint(posts_bp, url_prefix='/api/posts')
+app.register_blueprint(auth_bp, url_prefix='/api/auth')
 
-    # Create database tables
-    with app.app_context():
-        db.create_all()
+with app.app_context():
+  db.create_all()
 
-        # Global error handler
-    @app.errorhandler(Exception)
-    def handle_error(error):
-        response = {
-            'error': str(error),
-            'status_code': 500  # Internal Server Error
-        }
-        return jsonify(response), 500
-
-    return app
+# Global error handler
+@app.errorhandler(Exception)
+def handle_error(error):
+    response = {
+        'error': str(error),
+        'status_code': 500  # Internal Server Error
+    }
+    return jsonify(response), 500

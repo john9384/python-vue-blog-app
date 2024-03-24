@@ -1,16 +1,19 @@
+from app.components.users.repository import user_repository
+from app.components.users.presenter import UserPresenter
+
 class UserService:
-  def read(query):
+  def read(self, query):
     user = user_repository.find_one(query)
     if user is None:
       return None
     
     return UserPresenter(user).serialize()
   
-  def read_many(query):
+  def read_many(self, query):
     users = user_repository.find_all(query)
     return [UserPresenter(user).serialize for user in users]
 
-  def update(query, data):
+  def update(self, query, data):
     payload = {
         'firstname': data.get('firstname'),
         'lastname': data.get('lastname'),
@@ -20,7 +23,7 @@ class UserService:
 
     return UserPresenter(user).serialize()
 
-  def delete(query):
+  def delete(self, query):
     user = user_repository.delete(query)   
 
     return UserPresenter(user).serialize()
