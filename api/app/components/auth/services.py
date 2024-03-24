@@ -31,6 +31,15 @@ class AuthService:
       raise Exception("Invalid username or password")
 
     auth_token = JWT().encode_auth_token(user.id)
-    print(auth_token)
+    user_repository.update({'id': user.id} ,{'is_active': True})
+    return {'token': auth_token, 'user': UserPresenter(user).serialize()}
+  
+  def logout(self, user_id):
+    user = user_repository.find_one({ 'id' : user_id})
+
+    if not user or not check_password_hash(user.password, password):
+      raise Exception("Invalid username or password")
+
+    user_repository.update({'id': user.id} , {'is_active': False})
     return {'token': auth_token, 'user': UserPresenter(user).serialize()}
         

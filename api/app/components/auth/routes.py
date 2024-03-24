@@ -32,7 +32,7 @@ def login():
 @is_authenticated
 @handle_route_errors
 def logout():
-    logout_user()
+    auth_service.login(request.user['id'])
     return SuccessResponse("User logged out").send()
 
 @auth_bp.route('/user', methods=['GET'])
