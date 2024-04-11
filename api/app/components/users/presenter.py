@@ -7,7 +7,7 @@ class UserPresenter:
     return {
       'id': self.user.id,
       'firstname': self.user.firstname,
-      'lastname': self.user.firstname,
+      'lastname': self.user.lastname,
       'email': self.user.email,
       'username': self.user.username,
     }

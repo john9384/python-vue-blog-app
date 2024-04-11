@@ -1,5 +1,6 @@
 from flask import Blueprint, jsonify, request
 from app import db
+from app.lib.response import SuccessResponse, OK, CREATED, BAD_REQUEST
 from app.lib.error_handler import handle_route_errors
 from app.components.users.models import User
 from app.components.users.repository import user_repository
@@ -12,8 +13,8 @@ users_bp = Blueprint('users', __name__)
 @handle_route_errors
 def get_all_users():
     query_params = request.args
-    users = user_repository.find_all(query_params)
-    return jsonify({'users': users})
+    outcome = user_repository.find_all(query_params)
+    return SuccessResponse("User fetched successfully", outcome, OK).send()
 
 @users_bp.route('/current-user', methods=['GET'])
 @is_authenticated
